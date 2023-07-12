@@ -27,14 +27,7 @@ public class RateLimiterPocApplication {
         var start = Instant.now();
         try (ExecutorService executor = Executors.newFixedThreadPool(1000)) {
             range(0, numberOfTasks)
-                    .boxed()
-                    .map(i -> (Runnable) () -> {
-                        try {
-                            sleep(550); // Some blocking IOs
-                            System.out.println("Hello world");
-                        } catch (InterruptedException ignored) {
-                        }
-                    })
+                    .mapToObj(i -> (Runnable) RateLimiterPocApplication::someBlockingIOs)
                     .map(runnable -> RateLimiter.decorateRunnable(customRateLimiter, runnable))
                     .forEach(executor::submit);
             executor.shutdown();
@@ -44,6 +37,13 @@ public class RateLimiterPocApplication {
         long durationInMillis = end.toEpochMilli() - start.toEpochMilli();
         System.out.println("durationInMillis : " + durationInMillis);
         System.out.println("rate : " + (double) numberOfTasks / durationInMillis * 1000 + " tasks/second");
+    }
 
+    private static void someBlockingIOs() {
+        try {
+            sleep(550); // Some blocking IOs
+            System.out.println("Hello world");
+        } catch (InterruptedException ignored) {
+        }
     }
 }
